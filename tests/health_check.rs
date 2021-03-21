@@ -1,25 +1,5 @@
 use std::net::TcpListener;
 
-#[actix_rt::test]
-async fn health_check_works() {
-    // Arrange
-    let address = spawn_app();
-
-    // We need reqwest for HTTP requests against our application
-    let client = reqwest::Client::new();
-
-    // Act
-    let response = client
-        .get(&format!("{}/health-check", &address))
-        .send()
-        .await
-        .expect("Failed to execute request.");
-
-    // Assert
-    assert!(response.status().is_success()); // 200 OK
-    assert_eq!(Some(0), response.content_length()); // no body
-}
-
 fn spawn_app() -> String {
     // Port 0 will have the OS assign a random available portnumber
     // this will ensure that multiple parallel tests do not attempt to bind to the same port
@@ -31,3 +11,44 @@ fn spawn_app() -> String {
 
     format!("http://127.0.0.1:{}", port)
 }
+
+#[actix_rt::test]
+async fn health_check_works() {
+    // Arrange
+    let app_address = spawn_app();
+    let client = reqwest::Client::new();
+
+    // Act
+    let response = client
+        .get(&format!("{}/health-check", &app_address))
+        .send()
+        .await
+        .expect("Failed to execute request.");
+
+    // Assert
+    assert!(response.status().is_success()); // 200 OK
+    assert_eq!(Some(0), response.content_length()); // no body
+}
+
+#[actix_rt::test]
+async fn subscribe_returns_200_for_valid_form_data() {
+    // Arrange
+    let app_address = spawn_app();
+    let client = reqwest::Client::new();
+    let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
+
+    // Act
+    let response = client
+        .post(&format!("{}/subscriptions", &app_address))
+        .header("Content-Type", "application/x-www-form-urlencoded")
+        .body(body)
+        .send()
+        .await
+        .expect("Failed to execute request.");
+
+    // Assert
+    assert_eq!(200, response.status().as_u16());
+}
+
+// #[actix_rt::test]
+// async fn subscribe_returns_a_400_when_data_is_missing() {}
