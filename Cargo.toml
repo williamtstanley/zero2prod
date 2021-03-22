@@ -12,9 +12,10 @@ path = "src/main.rs"
 name = "zero2prod"
 
 [dependencies]
-actix-web = ">=0.7.15"
+actix-web = "4.0.0-beta.4"
+serde = { version = "1", features = ["derive"]}
 
 [dev-dependencies]
 reqwest = "0.11"
-actix-rt = "2.1.0"
+actix-rt = "2"
 tokio = "1"
